@@ -1,0 +1,63 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String         @id @default(uuid())
+  name           String
+  email          String         @unique
+  password       String
+  active_account Boolean        @default(true)
+  shoppingLists  ShoppingList[]
+  purchases      Purchases[]
+
+  @@map("users")
+}
+
+model ShoppingList {
+  id                   Int                    @id @default(autoincrement())
+  createdAt            DateTime               @default(now())
+  title                String                 @db.VarChar(255)
+  finished             Boolean                @default(false)
+  user                 User                   @relation(fields: [userId], references: [id])
+  userId               String
+  ShoppingListProducts ShoppingListProducts[]
+
+  @@map("shopping_lists")
+}
+
+model ShoppingListProducts {
+  id             Int          @id @default(autoincrement())
+  name           String       @db.VarChar(50)
+  shoppingList   ShoppingList @relation(fields: [shoppingListId], references: [id], onDelete: Cascade)
+  shoppingListId Int
+  checked        Boolean      @default(false)
+
+  @@map("shopping_lists_products")
+}
+
+model Purchases {
+  id                Int                 @id @default(autoincrement())
+  createdAt         DateTime            @default(now())
+  title             String              @db.VarChar(255)
+  user              User                @relation(fields: [userId], references: [id])
+  userId            String
+  PurchasedProducts PurchasedProducts[]
+
+  @@map("purchases")
+}
+
+model PurchasedProducts {
+  id         Int       @id @default(autoincrement())
+  name       String    @db.VarChar(50)
+  Purchases  Purchases @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  purchaseId Int
+
+  @@map("purchased_products")
+}
